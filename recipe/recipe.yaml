@@ -2,7 +2,7 @@
 context:
   name: pixi-build-cmake
   crate_name: pixi_build_cmake
-  version: "0.3.14"
+  version: "0.4.0"
 
 package:
   name: ${{ name }}
@@ -11,7 +11,7 @@ package:
 source:
   url: https://github.com/prefix-dev/pixi/archive/refs/tags/${{ name }}-v${{ 
     version }}.tar.gz
-  sha256: 03ddc57fdb13bc13a5160795d50e0c8fa6199f41ec0352b7f0f3ca9c3adfa62d
+  sha256: e41392826a9170097705e118748179e776fd144dbd89f49a12e1b7e91bbd7ebc
 
 build:
   number: 0
