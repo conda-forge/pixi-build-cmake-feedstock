@@ -1,74 +1,93 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/prefix-dev/recipe-format/main/schema.json
 context:
   name: pixi-build-cmake
-  version: "0.2.0"
+  crate_name: pixi_build_cmake
+  version: "0.4.0"
 
 package:
   name: ${{ name }}
   version: ${{ version }}
 
 source:
-  url: https://github.com/prefix-dev/pixi-build-backends/archive/refs/tags/${{ name }}-v${{ version }}.tar.gz
-  sha256: a2345509a1ad738f315551ebf32b6baaa60df6f3f71207617e599cdc7e1df010
+  url: https://github.com/prefix-dev/pixi/archive/refs/tags/${{ name }}-v${{ 
+    version }}.tar.gz
+  sha256: e41392826a9170097705e118748179e776fd144dbd89f49a12e1b7e91bbd7ebc
 
 build:
   number: 1
   script:
     env:
+      # Use cmake to build aws-lc-sys, because conda's CFLAGS inject -O2 which
+      # overrides the -O0 required by jitterentropy-base.c, causing a build failure.
+      AWS_LC_SYS_CMAKE_BUILDER: "1"
       CARGO_PROFILE_RELEASE_STRIP: symbols
       CARGO_PROFILE_RELEASE_LTO: fat
     content:
-      - if: osx and x86_64
-        then:
+    - if: osx and x86_64
+      then:
           # use the default linker for osx-64 as we are hitting a bug with the conda-forge linker
           # https://github.com/rust-lang/rust/issues/140686
-          - unset CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER
+      - unset CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER
 
-      - if: unix
-        then:
-          - export OPENSSL_DIR="$PREFIX"
-      - if: win
-        then:
-          - set CARGO_HOME=C:\.cargo
-          - md %CARGO_HOME%
-      - cargo auditable install --locked --no-track --bins --root ${{ PREFIX }} --path crates/${{ name }}
-      - cargo-bundle-licenses --format yaml --output ./THIRDPARTY.yml
+    - if: unix
+      then:
+      - export OPENSSL_DIR="$PREFIX"
+    - if: linux
+      then:
+        # aws-lc-sys' cmake builder defaults to the "Unix Makefiles" generator, but the
+        # Linux build environment has no make; use the ninja generator instead.
+      - export CMAKE_GENERATOR=Ninja
+    - if: win
+      then:
+      - set CARGO_HOME=C:\.cargo
+      - md %CARGO_HOME%
+    - cargo auditable install --locked --no-track --bins --root ${{ PREFIX }} 
+      --path crates/${{ crate_name }} --no-default-features --features 
+      native-tls
+    - cargo-bundle-licenses --format yaml --output ./THIRDPARTY.yml
   files:
-    - bin/${{ name }}
-    - bin/${{ name }}.exe
+  - bin/${{ name }}
+  - bin/${{ name }}.exe
 
 requirements:
   build:
-    - ${{ compiler("rust") }}
-    - cargo-bundle-licenses
-    - cargo-auditable
+  - ${{ compiler("rust") }}
+  - ${{ stdlib("c") }}
+  # for building aws-lc-sys
+  - cmake
+  - ninja
+  - cargo-bundle-licenses
+  - cargo-auditable
   host:
-    - pkg-config
-    - libzlib
-    - liblzma
-    - if: unix
-      then: openssl
+  - if: target_platform != 'win-arm64'
+    then: pkg-config
+  - if: unix
+    then: openssl
   run:
-    - pixi-build-api-version >=0,<1
+  - pixi-build-api-version >=4,<5
 
 tests:
-  - script: ${{ name }} --help
-  - package_contents:
-      bin:
-        - ${{ name }}
+- script:
+  - if: build_platform == target_platform
+    then: ${{ name }} --help
+- package_contents:
+    bin:
+    - ${{ name }}
 
 about:
-  homepage: https://github.com/prefix-dev/pixi-build-backends
+  homepage: https://github.com/prefix-dev/pixi
   summary: A pixi build backend to build CMake based packages.
   description: |
     This package provides a build backend for pixi that allows building packages using CMake.
   license: BSD-3-Clause
   license_file:
-    - LICENSE
-    - THIRDPARTY.yml
-  documentation: https://prefix-dev.github.io/pixi-build-backends
-  repository: https://github.com/prefix-dev/pixi-build-backends
+  - LICENSE
+  - THIRDPARTY.yml
+  documentation: https://pixi.prefix.dev/latest/build/backends/pixi-build-cmake/
+  repository: https://github.com/prefix-dev/pixi
 
 extra:
   recipe-maintainers:
-    - baszalmstra
+  - Hofer-Julian
+  - baszalmstra
+  - ruben-arts
