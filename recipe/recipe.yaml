@@ -2,7 +2,7 @@
 context:
   name: pixi-build-cmake
   crate_name: pixi_build_cmake
-  version: "0.4.0"
+  version: "0.4.2"
 
 package:
   name: ${{ name }}
@@ -11,10 +11,10 @@ package:
 source:
   url: https://github.com/prefix-dev/pixi/archive/refs/tags/${{ name }}-v${{ 
     version }}.tar.gz
-  sha256: e41392826a9170097705e118748179e776fd144dbd89f49a12e1b7e91bbd7ebc
+  sha256: a85e06c6c70ff5cd98c27655e34054d8608c78b724715a86e9d75c33efceb40a
 
 build:
-  number: 1
+  number: 0
   script:
     env:
       # Use cmake to build aws-lc-sys, because conda's CFLAGS inject -O2 which
