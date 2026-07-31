@@ -2,7 +2,7 @@
 context:
   name: pixi-build-cmake
   crate_name: pixi_build_cmake
-  version: "0.4.4"
+  version: "0.4.5"
 
 package:
   name: ${{ name }}
@@ -11,7 +11,7 @@ package:
 source:
   url: https://github.com/prefix-dev/pixi/archive/refs/tags/${{ name }}-v${{ 
     version }}.tar.gz
-  sha256: 4d028783d96ea34264c0e98e823a11be91dcd257f49d991e1b31ce91c13cf8bf
+  sha256: d85acf74e09619ddf2c368f675aedb0cffaf6bde79357618b957fe3e8e820766
 
 build:
   number: 0
@@ -64,7 +64,7 @@ requirements:
   - if: unix
     then: openssl
   run:
-  - pixi-build-api-version >=5,<6
+  - pixi-build-api-version >=6,<7
 
 tests:
 - script:
